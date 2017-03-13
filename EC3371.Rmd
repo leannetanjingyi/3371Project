@@ -21,6 +21,7 @@ knitr::opts_chunk$set(echo = TRUE)
                           Indicator.Code,
                           X2012,
                           X2013)
+ 
  df.2013$Indicator.Name <- as.character(as.factor(df.2013$Indicator.Name))
  df.2013$Country.Name <- as.character(as.factor(df.2013$Country.Name))
  df.2013$Country.Code <- as.character(as.factor(df.2013$Country.Code))
