@@ -1,0 +1,123 @@
+---
+title: "EC3371"
+author: "Leanne"
+date: "13 March 2017"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r dataframe, include=FALSE}
+
+ library(dplyr)
+
+ df <- read.csv("WDI_Data.csv")
+ df.2013 <- dplyr::select(df, 
+                          Country.Name,
+                          Country.Code,
+                          Indicator.Name,
+                          Indicator.Code,
+                          X2012,
+                          X2013)
+ df.2013$Indicator.Name <- as.character(as.factor(df.2013$Indicator.Name))
+ df.2013$Country.Name <- as.character(as.factor(df.2013$Country.Name))
+ df.2013$Country.Code <- as.character(as.factor(df.2013$Country.Code))
+ df.2013$Indicator.Code <- as.character(as.factor(df.2013$Indicator.Code))
+ 
+ df.12 <- dplyr::select(df.2013, 
+                        Country.Name,
+                        Country.Code,
+                        Indicator.Name,
+                        Indicator.Code,
+                        X2012)
+ 
+ df.12 <- df.12[complete.cases(df.12),]
+ 
+ 
+ df.13 <- dplyr::select(df.2013, 
+                        Country.Name,
+                        Country.Code,
+                        Indicator.Name,
+                        Indicator.Code,
+                        X2013)
+ df.13 <- df.13[complete.cases(df.13),]
+ 
+ #GDP Data 
+ df.gdp.13 <- df.13
+ df.gdp.13 <- df.gdp.13[df.gdp.13$Indicator.Code == "NY.GDP.PCAP.CD",]
+ 
+ df.gdp.12 <- df.12
+ df.gdp.12 <- df.gdp.12[df.gdp.12$Indicator.Code == "NY.GDP.PCAP.CD",]
+ 
+ df.gdp.12.13 <- merge.data.frame(df.gdp.12, df.gdp.13, by = "Country.Name")
+ df.gdp.12.13 <- dplyr::select(df.gdp.12.13,
+                               Country.Name,
+                               Country.Code.x,
+                               X2013,
+                               X2012)
+ df.gdp.12.13 <- dplyr::rename(df.gdp.12.13,
+                               Country.Code = Country.Code.x,
+                               GDP.2012 = X2012 ,
+                               GDP.2013 = X2013)
+ 
+ #Air Pollution Data 
+ library(stringr)
+ air <- "PM2.5"
+ df.air <- df.13
+ df.air$Air.Pollution <- str_detect(df.air$Indicator.Name, air)
+ df.air <- df.air[df.air$Air.Pollution == "TRUE",]
+ df.air <- df.air[, -c(6)]
+ df.air.avg.pol <- df.air[df.air$Indicator.Code == "EN.ATM.PM25.MC.M3",]
+ df.air.avg.pol <- dplyr::select(df.air.avg.pol,
+                                 Country.Name,
+                                 X2013)
+ colnames(df.air.avg.pol)[2] <- "Mean.Annual.Exposure.PM2.5.2013"
+ df.gdp.air <- merge.data.frame(df.gdp.12.13, df.air.avg.pol, by = "Country.Name")
+ df.gdp.air$Log.GDP.2013 <- log(df.gdp.air$GDP.2013)
+ df.gdp.air$Log.GDP.2012 <- log(df.gdp.air$GDP.2012)
+ df.gdp.air$Change.Log.GDP <- (df.gdp.air$Log.GDP.2013 - df.gdp.air$Log.GDP.2012)
+ library(ggplot2)
+
+```
+
+
+```{r gdp pollution plot, echo=FALSE}
+
+ggplot(df.gdp.air, aes(x=Mean.Annual.Exposure.PM2.5.2013, y= Log.GDP.2013)) +
+    geom_point(shape=19) +   
+    geom_smooth(method=lm) 
+
+ggsave("Qn1.png")
+
+```
+
+```{r change gdp pollution plot, echo=FALSE}
+
+ggplot(df.gdp.air, aes(x=Mean.Annual.Exposure.PM2.5.2013, y= Change.Log.GDP)) +
+    geom_point(shape=19) +   
+    geom_smooth(method=lm) 
+
+ggsave("Qn1b.png")
+
+```
+
+```{r population density, include=FALSE}
+
+ df.popdensity.13 <- df.13[df.13$Indicator.Code == "EN.POP.DNST", ]
+ df.popdensity.13 <- dplyr::select(df.popdensity.13, 1,5)
+ colnames(df.popdensity.13)[2] <- "Population.density"
+ df.gdp.air.popdens <- merge.data.frame(df.gdp.air, df.popdensity.13, by = "Country.Name")
+
+```
+
+```{r change gdp pop density plot, echo=FALSE}
+
+ggplot(df.gdp.air.popdens, aes(x=Population.density, y= Change.Log.GDP)) +
+    geom_point(shape=19) +   
+    geom_smooth(method=lm) 
+
+ggsave("Qn2a.png")
+
+```
