@@ -12,6 +12,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```{r dataframe, include=FALSE}
 
  library(dplyr)
+ library(stringr)
 
  df <- read.csv("WDI_Data.csv")
  df.2013 <- dplyr::select(df, 
@@ -46,7 +47,12 @@ knitr::opts_chunk$set(echo = TRUE)
  df.13 <- df.13[complete.cases(df.13),]
  
  #GDP Data 
+ gdp <- "GDP"
  df.gdp.13 <- df.13
+ df.gdp.13$GDP <- str_detect(df.gdp.13$Indicator.Name, gdp)
+ df.gdp.13 <- df.gdp.13[df.gdp.13$GDP == "TRUE",]
+ 
+ #Isolating a particular GDP 
  df.gdp.13 <- df.gdp.13[df.gdp.13$Indicator.Code == "NY.GDP.PCAP.CD",]
  
  df.gdp.12 <- df.12
