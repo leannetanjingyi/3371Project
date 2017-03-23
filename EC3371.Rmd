@@ -213,7 +213,7 @@ ggsave("Qn3.png")
  #Identify Products with Tariffs more than 35%
  tariff35 <- tariff[tariff$AVDuty.minimum >  35, ]
  tariff35 <- tariff35[apply(tariff35, 1, function(y) !all(is.na(y))),]
- tariff35 <- dplyr::select(tariff35, 1, 2, 3, 5, 9 , 10 , 11 , 12 , 18, 19)
+ tariff35 <- dplyr::select(tariff35, 1, 5, 9 , 10 , 11 , 18, 19)
  
  library(pander)
  panderOptions('table.split.table', Inf)
