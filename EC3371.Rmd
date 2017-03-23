@@ -52,11 +52,11 @@ knitr::opts_chunk$set(echo = TRUE)
  df.gdp.13$GDP <- str_detect(df.gdp.13$Indicator.Name, gdp)
  df.gdp.13 <- df.gdp.13[df.gdp.13$GDP == "TRUE",]
  
- #Isolating a particular GDP 
- df.gdp.13 <- df.gdp.13[df.gdp.13$Indicator.Code == "NY.GDP.PCAP.CD",]
+ #Isolating a particular GDP, GDP per cap for constant 2010$
+ df.gdp.13 <- df.gdp.13[df.gdp.13$Indicator.Code == "NY.GDP.PCAP.KD",]
  
  df.gdp.12 <- df.12
- df.gdp.12 <- df.gdp.12[df.gdp.12$Indicator.Code == "NY.GDP.PCAP.CD",]
+ df.gdp.12 <- df.gdp.12[df.gdp.12$Indicator.Code == "NY.GDP.PCAP.KD",]
  
  df.gdp.12.13 <- merge.data.frame(df.gdp.12, df.gdp.13, by = "Country.Name")
  df.gdp.12.13 <- dplyr::select(df.gdp.12.13,
@@ -85,7 +85,9 @@ knitr::opts_chunk$set(echo = TRUE)
  df.gdp.air$Log.GDP.2013 <- log(df.gdp.air$GDP.2013)
  df.gdp.air$Log.GDP.2012 <- log(df.gdp.air$GDP.2012)
  df.gdp.air$Change.Log.GDP <- (df.gdp.air$Log.GDP.2013 - df.gdp.air$Log.GDP.2012)
+ df.gdp.air$Growth.Log.GDP <- df.gdp.air$Change.Log.GDP/df.gdp.air$Log.GDP.2012
  library(ggplot2)
+ library(ggthemes)
 
 ```
 
@@ -94,7 +96,12 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ggplot(df.gdp.air, aes(x=Mean.Annual.Exposure.PM2.5.2013, y= Log.GDP.2013)) +
     geom_point(shape=19) +   
-    geom_smooth(method=lm) 
+    geom_smooth(method = loess, method.args = list(family = "symmetric")) + 
+      ggtitle("Relationship between Log GDP and Air Pollution in 2013") + 
+      xlab("\nPM 2.5 Mean Annual Exposure") + 
+      ylab("Log GDP per capita (constant 2010 US$)\n") + 
+      theme_minimal() +
+      theme(plot.title = element_text(hjust = 0.5, face = "bold"))
 
 ggsave("Qn1.png")
 
@@ -102,11 +109,33 @@ ggsave("Qn1.png")
 
 ```{r change gdp pollution plot, echo=FALSE}
 
-ggplot(df.gdp.air, aes(x=Mean.Annual.Exposure.PM2.5.2013, y= Change.Log.GDP)) +
+ggplot(df.gdp.air, aes(x=Mean.Annual.Exposure.PM2.5.2013, y= Growth.Log.GDP)) +
     geom_point(shape=19) +   
-    geom_smooth(method=lm) 
+    geom_smooth(method = loess, method.args = list(family = "symmetric")) + 
+      ggtitle("Relationship between Growth Log GDP and Air Pollution in 2013") + 
+      xlab("\nPM 2.5 Mean Annual Exposure") + 
+      ylab("Growth in Log GDP per capita (constant 2010 US$)\n") + 
+      labs (caption = "Formula for Growth = (Log GDP per capita in 2013 - Log GDP per capita in 2012)/Log GDP per capita in 2012" ) +
+      theme_minimal() +
+      theme(plot.title = element_text(hjust = 0.5))
 
 ggsave("Qn1b.png")
+
+#Since there's an annoying point, drop it from sample
+
+ df.gdp.air1 <- df.gdp.air[df.gdp.air$Growth.Log.GDP > -0.01,]
+ ggplot(df.gdp.air1, aes(x=Mean.Annual.Exposure.PM2.5.2013, y= Growth.Log.GDP)) +
+    geom_point(shape=19) +   
+    geom_smooth(method = loess, method.args = list(family = "symmetric")) + 
+      ggtitle("Relationship between Growth Log GDP and Air Pollution in 2013") + 
+      xlab("\nPM 2.5 Mean Annual Exposure") + 
+      ylab("Growth in Log GDP per capita (constant 2010 US$)\n") + 
+      labs (caption = "Outlier (Growth < -0.01) was removed for asthetic purposes. \n Formula for Growth = (Log GDP per capita in 2013 - Log GDP per capita in 2012)/Log GDP per capita in 2012 \n") +
+      theme_minimal() +
+      theme(plot.title = element_text(hjust = 0.5, face = "bold"),
+            plot.caption = element_text(face = "italic"))
+
+ggsave("Qn1c.png")
 
 ```
 
@@ -128,3 +157,80 @@ ggplot(df.gdp.air.popdens, aes(x=Population.density, y= Change.Log.GDP)) +
 ggsave("Qn2a.png")
 
 ```
+
+```{r manufacturing, echo=FALSE}
+
+ manufacturing <- "Manufacturing"
+ df.manufacturing <- df.13
+ df.manufacturing$Manufacture <- str_detect(
+       df.manufacturing$Indicator.Name, manufacturing)
+ df.manufacturing <- df.manufacturing[df.manufacturing$Manufacture == "TRUE",]
+ df.manufacturing <- df.manufacturing[df.manufacturing$Indicator.Code == "NV.IND.MANF.ZS",]
+ df.manufacturing <- dplyr::select(df.manufacturing,
+                                   Country.Name,
+                                   X2013)
+ colnames(df.manufacturing)[2] <- "Percent.Manufacture.GDP"
+ df.gdp.air.manu <- merge.data.frame(df.gdp.air, df.manufacturing, by = "Country.Name")
+ 
+
+
+```
+
+```{r manu graph, echo =FALSE}
+
+ggplot(df.gdp.air.manu, aes(x=Percent.Manufacture.GDP, y= Log.GDP.2013)) +
+    geom_point(shape=19) +   
+    geom_smooth(method = loess, method.args = list(family = "symmetric")) + 
+      ggtitle("Relationship between Share of Manufacturing & Log GDP per Capita") + 
+      xlab("\n Manufacturing, value added (% of GDP)") + 
+      ylab("Log GDP per capita (constant 2010 US$)\n") + 
+      theme_minimal() +
+      theme(plot.title = element_text(hjust = 0.5, face = "bold"))
+
+ggsave("Qn3.png")
+
+
+```
+
+```{r dataset tariff, echo=FALSE}
+
+ dftariff <- read.csv("Applied_MFN_Tariffs.txt", sep = "", header = TRUE)
+ dftariff$Description <- as.character(as.factor(dftariff$Description))
+ dftariff$Type <- ifelse(dftariff$HS.code.level ==2, dftariff$Description, NA)
+ dftariff$firsttwo <- substr(dftariff$Product, start = 1, stop = 2)
+ dftariff$Reporter <- as.character(as.factor(dftariff$Reporter))
+ 
+ library(zoo)
+ tariff <- dftariff %>% 
+       group_by(firsttwo, Reporter) %>% 
+       na.locf(19) %>% ungroup
+
+ tariff <- tariff[tariff$HS.code.level == 6, ]
+ tariff$AVDuty.average <- as.numeric(tariff$AVDuty.average) 
+ tariff$AVDuty.minimum <- as.numeric(tariff$AVDuty.minimum) 
+ tariff$AVDuty.maximum <- as.numeric(tariff$AVDuty.maximum) 
+ 
+ #Identify Products with Tariffs more than 35%
+ tariff35 <- tariff[tariff$AVDuty.minimum >  35, ]
+ tariff35 <- tariff35[apply(tariff35, 1, function(y) !all(is.na(y))),]
+ tariff35 <- dplyr::select(tariff35, 1, 2, 3, 5, 9 , 10 , 11 , 12 , 18, 19)
+ 
+ library(pander)
+ panderOptions('table.split.table', Inf)
+ 
+ summary <- tariff %>% 
+		group_by(Type, Reporter) %>% 
+		summarise( Total.Average.Tariff.Rates = sum(AVDuty.average),
+			   Total.Min.Tariff.Rates = sum(AVDuty.minimum),
+			   Total.Max.Tariff.Rates = sum(AVDuty.maximum) )
+
+```
+
+```{r tariff > 35 , echo=FALSE}
+
+ pander(tariff35)
+
+```
+
+It is possible that the Tariffs are high for such products to discourage foreign countries from buying them. Grains may be due to food security. 
+
