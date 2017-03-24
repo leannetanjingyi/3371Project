@@ -148,9 +148,37 @@ ggsave("Qn1c.png")
 
 ```
 
+```{r age dependncy ration, include=FALSE}
+
+ df.adr.13 <- df.13[df.13$Indicator.Code=="SP.POP.DPND",]
+ df.adr.13 <- dplyr::select(df.adr.13, 1 , 5)
+ colnames(df.adr.13)[2] <- "Age.Dependency.Ratio"
+ df.gdp.air.manu.adr <- merge.data.frame(df.gdp.air.manu, df.adr.13, by = "Country.Name")
+
+
+```
+
+```{r adr plot, echo=FALSE}
+
+ ggplot(df.gdp.air.manu.adr, aes(x=Age.Dependency.Ratio, y= Log.GDP.2013)) +
+    geom_point(shape=19) +   
+    geom_smooth(method = loess, method.args = list(family = "symmetric")) + 
+      ggtitle("Relationship between Log GDP and Age Dependency Ratio") + 
+      xlab("\n Age dependency ratio (% of working-age population)") + 
+      ylab("Log GDP per capita (constant 2010 US$)\n") + 
+      theme_minimal() +
+      theme(plot.title = element_text(hjust = 0.5, face = "bold"),
+            plot.caption = element_text(face = "italic"))
+
+ggsave("Qn2.png")
+
+```
+
+
+
 ```{r change gdp pop density plot, echo=FALSE}
 
-ggplot(df.gdp.air.popdens, aes(x=Population.density, y= Change.Log.GDP)) +
+ggplot(df.gdp.air.popdens, aes(x=Population.density, y= Log.GDP.2013)) +
     geom_point(shape=19) +   
     geom_smooth(method=lm) 
 
