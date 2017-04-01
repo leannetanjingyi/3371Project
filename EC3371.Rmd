@@ -92,22 +92,27 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 
-```{r gdp pollution plot, echo=FALSE}
+```{r gdp pollution plot, echo=FALSE, fig.width=7.29, fig.height=4.5}
 
 ggplot(df.gdp.air, aes(x=Mean.Annual.Exposure.PM2.5.2013, y= Log.GDP.2013)) +
     geom_point(shape=19) +   
     geom_smooth(method = loess, method.args = list(family = "symmetric")) + 
+        geom_smooth(method = "lm", formula = y ~ poly(x, 2), 
+color = "green") +
       ggtitle("Relationship between Log GDP and Air Pollution in 2013") + 
       xlab("\nPM 2.5 Mean Annual Exposure") + 
       ylab("Log GDP per capita (constant 2010 US$)\n") + 
       theme_minimal() +
       theme(plot.title = element_text(hjust = 0.5, face = "bold"))
 
-ggsave("Qn1.png")
+ggsave("Qn1-1.png")
+
+ loggdp.air.reg <- lm(Log.GDP.2013~Mean.Annual.Exposure.PM2.5.2013+I(Mean.Annual.Exposure.PM2.5.2013^2), data = df.gdp.air)
+ pander::pander(loggdp.air.reg)
 
 ```
 
-```{r change gdp pollution plot, echo=FALSE}
+```{r change gdp pollution plot, echo=FALSE, fig.width=7.29, fig.height=4.5}
 
 ggplot(df.gdp.air, aes(x=Mean.Annual.Exposure.PM2.5.2013, y= Growth.Log.GDP)) +
     geom_point(shape=19) +   
@@ -137,6 +142,9 @@ ggsave("Qn1b.png")
 
 ggsave("Qn1c.png")
 
+ gdp.air.reg <- lm(Growth.Log.GDP~Mean.Annual.Exposure.PM2.5.2013, data = df.gdp.air1)
+ pander::pander(gdp.air.reg)
+
 ```
 
 ```{r population density, include=FALSE}
@@ -153,17 +161,24 @@ ggsave("Qn1c.png")
  df.adr.13 <- df.13[df.13$Indicator.Code=="SP.POP.DPND",]
  df.adr.13 <- dplyr::select(df.adr.13, 1 , 5)
  colnames(df.adr.13)[2] <- "Age.Dependency.Ratio"
- df.gdp.air.manu.adr <- merge.data.frame(df.gdp.air.manu, df.adr.13, by = "Country.Name")
+ df.gdp.air.manu.adr <- merge.data.frame(df.gdp.air, df.adr.13, by = "Country.Name")
+ 
+ 
+ df.oadr.13 <- df.13[df.13$Indicator.Code=="SP.POP.DPND.OL",]
+ df.oadr.13 <- dplyr::select(df.oadr.13, 1 , 5)
+ colnames(df.oadr.13)[2] <- "Old.Age.Dependency.Ratio"
+ df.gdp.air.manu.adr.oadr <- merge.data.frame(df.gdp.air.manu.adr, df.oadr.13, by = "Country.Name")
+ 
 
 
 ```
 
-```{r adr plot, echo=FALSE}
+```{r adr plot, echo=FALSE, fig.width=7.29, fig.height=4.5}
 
  ggplot(df.gdp.air.manu.adr, aes(x=Age.Dependency.Ratio, y= Log.GDP.2013)) +
     geom_point(shape=19) +   
     geom_smooth(method = loess, method.args = list(family = "symmetric")) + 
-      ggtitle("Relationship between Log GDP and Age Dependency Ratio") + 
+      ggtitle("Relationship between Log GDP and Age Dependency Ratio in 2013") + 
       xlab("\n Age dependency ratio (% of working-age population)") + 
       ylab("Log GDP per capita (constant 2010 US$)\n") + 
       theme_minimal() +
@@ -172,11 +187,32 @@ ggsave("Qn1c.png")
 
 ggsave("Qn2.png")
 
+ adr.reg <- lm(Log.GDP.2013~Age.Dependency.Ratio, data = df.gdp.air.manu.adr)
+ adr.reg.2 <- lm(Log.GDP.2013~Age.Dependency.Ratio+Old.Age.Dependency.Ratio, data = df.gdp.air.manu.adr.oadr)
+ 
+ library(memisc)
+ memisc::mtable(adr.reg)
+ pander::pander(adr.reg)
+ pander::pander(adr.reg.2)
+
+
+ ggplot(df.gdp.air.manu.adr.oadr, aes(x=Old.Age.Dependency.Ratio, y= Log.GDP.2013)) +
+    geom_point(shape=19) +   
+    geom_smooth(method = loess, method.args = list(family = "symmetric")) + 
+      ggtitle("Relationship between Log GDP and Old Age Dependency Ratio in 2013") + 
+      xlab("\n Age dependency ratio, old (% of working-age population)") + 
+      ylab("Log GDP per capita (constant 2010 US$)\n") + 
+      theme_minimal() +
+      theme(plot.title = element_text(hjust = 0.5, face = "bold"),
+            plot.caption = element_text(face = "italic"))
+
+ggsave("Qn2a.png")
+
 ```
 
 
 
-```{r change gdp pop density plot, echo=FALSE}
+```{r change gdp pop density plot, echo=FALSE, fig.width=7.29, fig.height=4.5}
 
 ggplot(df.gdp.air.popdens, aes(x=Population.density, y= Log.GDP.2013)) +
     geom_point(shape=19) +   
@@ -185,6 +221,14 @@ ggplot(df.gdp.air.popdens, aes(x=Population.density, y= Log.GDP.2013)) +
 ggsave("Qn2a.png")
 
 ```
+
+```{r, eval=FALSE, include=FALSE}
+
+ SL.EMP.INSV.FE.ZS
+
+```
+
+
 
 ```{r manufacturing, echo=FALSE}
 
@@ -204,7 +248,7 @@ ggsave("Qn2a.png")
 
 ```
 
-```{r manu graph, echo =FALSE}
+```{r manu graph, echo =FALSE, fig.width=7.29, fig.height=4.5}
 
 ggplot(df.gdp.air.manu, aes(x=Percent.Manufacture.GDP, y= Log.GDP.2013)) +
     geom_point(shape=19) +   
@@ -217,7 +261,19 @@ ggplot(df.gdp.air.manu, aes(x=Percent.Manufacture.GDP, y= Log.GDP.2013)) +
 
 ggsave("Qn3.png")
 
+ gdp.manu.reg <- lm(Log.GDP.2013 ~ Percent.Manufacture.GDP, data = df.gdp.air.manu)
+ pander::pander(gdp.manu.reg)
+ 
+ ggplot(df.gdp.air.manu, aes(x=Percent.Manufacture.GDP, y= Log.GDP.2013)) +
+    geom_point(shape=19) +   
+    geom_smooth(method = lm) + 
+      ggtitle("Relationship between Share of Manufacturing & Log GDP per Capita") + 
+      xlab("\n Manufacturing, value added (% of GDP)") + 
+      ylab("Log GDP per capita (constant 2010 US$)\n") + 
+      theme_minimal() +
+      theme(plot.title = element_text(hjust = 0.5, face = "bold"))
 
+ ggsave("Qn3lm.png")
 ```
 
 ```{r dataset tariff, echo=FALSE}
@@ -236,12 +292,23 @@ ggsave("Qn3.png")
  tariff <- tariff[tariff$HS.code.level == 6, ]
  tariff$AVDuty.average <- as.numeric(tariff$AVDuty.average) 
  tariff$AVDuty.minimum <- as.numeric(tariff$AVDuty.minimum) 
- tariff$AVDuty.maximum <- as.numeric(tariff$AVDuty.maximum) 
+ tariff$AVDuty.maximum <- as.numeric(tariff$AVDuty.maximum)
+ tariff <- tariff[,colSums(is.na(tariff))<nrow(tariff)]
+ 
+ library(stringr)
+ tariff$Reporter <- str_replace_all(tariff$Reporter, "[[:punct:]]", "")
+ 
+ #Identify Tariff with either Reporter's average tax >0 
+ tariff0 <- tariff[tariff$Reporter =="Malaysia",]
+ tariff0 <- na.omit(tariff0)
+ tariff0$first <- substr(tariff0$Product, start = 1, stop = 1)
+ tariff0$Product.Num <- as.numeric(tariff0$Product)
+ 
  
  #Identify Products with Tariffs more than 35%
- tariff35 <- tariff[tariff$AVDuty.minimum >  35, ]
+ tariff35 <- tariff[tariff$AVDuty.minimum >= 35, ]
  tariff35 <- tariff35[apply(tariff35, 1, function(y) !all(is.na(y))),]
- tariff35 <- dplyr::select(tariff35, 1, 5, 9 , 10 , 11 , 18, 19)
+ tariff35 <- dplyr::select(tariff35, 1, 5, 9, 18, 19)
  
  library(pander)
  panderOptions('table.split.table', Inf)
@@ -251,6 +318,9 @@ ggsave("Qn3.png")
 		summarise( Total.Average.Tariff.Rates = sum(AVDuty.average),
 			   Total.Min.Tariff.Rates = sum(AVDuty.minimum),
 			   Total.Max.Tariff.Rates = sum(AVDuty.maximum) )
+ 
+ tariff$Type <- as.factor(tariff$Type)
+ tarifftype <- pander(dplyr::count(tariff,Reporter))
 
 ```
 
@@ -261,4 +331,38 @@ ggsave("Qn3.png")
 ```
 
 It is possible that the Tariffs are high for such products to discourage foreign countries from buying them. Grains may be due to food security. 
+
+```{r distribution of tarriff, echo=FALSE}
+
+library(ggplot2)
+tariff0.0 <- tariff0[tariff0$first == '0',] 
+tariff0.1 <- tariff0[tariff0$first == '1',] 
+tariff0.2 <- tariff0[tariff0$first == '2',] 
+tariff0.3 <- tariff0[tariff0$first == '3',] 
+tariff0.4 <- tariff0[tariff0$first == '4',] 
+tariff0.5 <- tariff0[tariff0$first == '5',] 
+tariff0.6 <- tariff0[tariff0$first == '6',] 
+tariff0.7 <- tariff0[tariff0$first == '7',] 
+tariff0.8 <- tariff0[tariff0$first == '8',] 
+tariff0.9 <- tariff0[tariff0$first == '9',] 
+
+dis.tariff.0 <- ggplot(tariff0, aes(x = Product.Num, y = AVDuty.average)) +
+      geom_point(aes(colour=as.numeric(firsttwo))) + 
+      scale_color_gradient(low="blue", high="red")+ 
+      theme_minimal() +  
+      theme(plot.title = element_text(hjust = 0.5, face = "bold")) +
+      labs(title = "Distribution of Duty Tax in Malaysia",
+           x = "\nProduct Code",
+           y = "Average Duty\n",
+           colour = "Product Type",
+           caption = "Product Type derived from first 2 digits of the Product Code\n"
+           )
+
+
+dis.tariff.0
+
+#Mean of Malaysia Tariff
+ mean.malay <- mean(tariff0$AVDuty.average, na.rm = "TRUE")
+
+```
 
