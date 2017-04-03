@@ -9,8 +9,10 @@ output: word_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+
 ```{r dataframe, include=FALSE}
 
+ #Data Cleaning 
  library(dplyr)
  library(stringr)
 
@@ -298,7 +300,7 @@ ggsave("Qn3.png")
  library(stringr)
  tariff$Reporter <- str_replace_all(tariff$Reporter, "[[:punct:]]", "")
  
- #Identify Tariff with either Reporter's average tax >0 
+ #Identify Malayisia's Tariff since Singapore has no tariffs
  tariff0 <- tariff[tariff$Reporter =="Malaysia",]
  tariff0 <- na.omit(tariff0)
  tariff0$first <- substr(tariff0$Product, start = 1, stop = 1)
