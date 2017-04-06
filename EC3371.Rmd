@@ -128,6 +128,9 @@ ggplot(df.gdp.air, aes(x=Mean.Annual.Exposure.PM2.5.2013, y= Growth.Log.GDP)) +
 
 ggsave("Qn1b.png")
 
+change.gdp.air.reg <- lm(Growth.Log.GDP~Mean.Annual.Exposure.PM2.5.2013+I(Mean.Annual.Exposure.PM2.5.2013^2), data = df.gdp.air)
+ pander::pander(change.gdp.air.reg)
+
 #Since there's an annoying point, drop it from sample
 
  df.gdp.air1 <- df.gdp.air[df.gdp.air$Growth.Log.GDP > -0.01,]
@@ -144,7 +147,7 @@ ggsave("Qn1b.png")
 
 ggsave("Qn1c.png")
 
- gdp.air.reg <- lm(Growth.Log.GDP~Mean.Annual.Exposure.PM2.5.2013, data = df.gdp.air1)
+ gdp.air.reg <- lm(Growth.Log.GDP~Mean.Annual.Exposure.PM2.5.2013, data = df.gdp.air)
  pander::pander(gdp.air.reg)
 
 ```
@@ -276,6 +279,9 @@ ggsave("Qn3.png")
       theme(plot.title = element_text(hjust = 0.5, face = "bold"))
 
  ggsave("Qn3lm.png")
+ 
+ gdp.manu.qrad.reg <- lm(Log.GDP.2013~Percent.Manufacture.GDP+I(Percent.Manufacture.GDP^2), data = df.gdp.air.manu)
+ pander::pander(gdp.manu.qrad.reg)
 ```
 
 ```{r dataset tariff, echo=FALSE}
@@ -353,9 +359,9 @@ dis.tariff.0 <- ggplot(tariff0, aes(x = Product.Num, y = AVDuty.average)) +
       scale_color_gradient(low="blue", high="red")+ 
       theme_minimal() +  
       theme(plot.title = element_text(hjust = 0.5, face = "bold")) +
-      labs(title = "Distribution of Duty Tax in Malaysia",
+      labs(title = "Distribution of Tariff in Malaysia",
            x = "\nProduct Code",
-           y = "Average Duty\n",
+           y = "Average Tariff (%)\n",
            colour = "Product Type",
            caption = "Product Type derived from first 2 digits of the Product Code\n"
            )
@@ -364,7 +370,18 @@ dis.tariff.0 <- ggplot(tariff0, aes(x = Product.Num, y = AVDuty.average)) +
 dis.tariff.0
 
 #Mean of Malaysia Tariff
- mean.malay <- mean(tariff0$AVDuty.average, na.rm = "TRUE")
+summary <- tariff %>%  na.omit() %>% group_by(Reporter) %>%
+  summarise(`25%`=quantile(AVDuty.average, probs=0.25),
+            `50%`=quantile(AVDuty.average, probs=0.5),
+            `75%`=quantile(AVDuty.average, probs=0.75),
+            avg=mean(AVDuty.average),
+            n=n())
+
 
 ```
+
+```{r}
+pander::pander(summary)
+```
+
 
