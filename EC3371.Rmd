@@ -98,6 +98,45 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ggplot(df.gdp.air, aes(x=Mean.Annual.Exposure.PM2.5.2013, y= Log.GDP.2013)) +
     geom_point(shape=19) +   
+    geom_smooth(method = loess, 
+                method.args = list(family = "symmetric"), 
+                aes(color ="LOESS") ) + 
+        geom_smooth(method = "lm", 
+                    formula = y ~ poly(x, 2, raw = TRUE), 
+                    aes(color = "Quadratic")) +
+      scale_colour_manual(name = "Curve Type",values=c("blue","green")) +
+      ggtitle("Relationship between Log GDP and Air Pollution in 2013") + 
+      xlab("\nPM 2.5 Mean Annual Exposure") + 
+      ylab("Log GDP per capita (constant 2010 US$)\n")  +
+      theme_minimal() +
+      theme(plot.title = element_text(hjust = 0.5, face = "bold"))
+
+ggsave("Qn1-1.png")
+
+ loggdp.air.reg <- lm(Log.GDP.2013~Mean.Annual.Exposure.PM2.5.2013+I(Mean.Annual.Exposure.PM2.5.2013^2), data = df.gdp.air)
+ 
+ loggdp.air.reg.lm <- lm(Log.GDP.2013~Mean.Annual.Exposure.PM2.5.2013, data = df.gdp.air)
+ 
+ pander::pander(loggdp.air.reg.lm)
+ 
+ pander::pander(loggdp.air.reg)
+
+ 
+ df.gdp.air75 <- df.gdp.air[df.gdp.air$Mean.Annual.Exposure.PM2.5.2013 <= 75,]
+ ggplot(df.gdp.air75, aes(x=Mean.Annual.Exposure.PM2.5.2013, y= Log.GDP.2013)) +
+    geom_point(shape=19) +   
+    geom_smooth(method = loess, method.args = list(family = "symmetric")) + 
+        geom_smooth(method = "lm", formula = y ~ poly(x, 2), 
+color = "green") +
+      ggtitle("Relationship between Log GDP and Air Pollution in 2013") + 
+      xlab("\nPM 2.5 Mean Annual Exposure") + 
+      ylab("Log GDP per capita (constant 2010 US$)\n") + 
+      theme_minimal() +
+      theme(plot.title = element_text(hjust = 0.5, face = "bold"))
+ 
+  df.gdp.air50 <- df.gdp.air[df.gdp.air$Mean.Annual.Exposure.PM2.5.2013 <= 50,]
+ ggplot(df.gdp.air50, aes(x=Mean.Annual.Exposure.PM2.5.2013, y= Log.GDP.2013)) +
+    geom_point(shape=19) +   
     geom_smooth(method = loess, method.args = list(family = "symmetric")) + 
         geom_smooth(method = "lm", formula = y ~ poly(x, 2), 
 color = "green") +
@@ -107,47 +146,42 @@ color = "green") +
       theme_minimal() +
       theme(plot.title = element_text(hjust = 0.5, face = "bold"))
 
-ggsave("Qn1-1.png")
-
- loggdp.air.reg <- lm(Log.GDP.2013~Mean.Annual.Exposure.PM2.5.2013+I(Mean.Annual.Exposure.PM2.5.2013^2), data = df.gdp.air)
- pander::pander(loggdp.air.reg)
-
 ```
 
 ```{r change gdp pollution plot, echo=FALSE, fig.width=7.29, fig.height=4.5}
 
-ggplot(df.gdp.air, aes(x=Mean.Annual.Exposure.PM2.5.2013, y= Growth.Log.GDP)) +
+ggplot(df.gdp.air, aes(x=Mean.Annual.Exposure.PM2.5.2013, y= Change.Log.GDP)) +
     geom_point(shape=19) +   
     geom_smooth(method = loess, method.args = list(family = "symmetric")) + 
       ggtitle("Relationship between Growth Log GDP and Air Pollution in 2013") + 
       xlab("\nPM 2.5 Mean Annual Exposure") + 
       ylab("Growth in Log GDP per capita (constant 2010 US$)\n") + 
-      labs (caption = "Formula for Growth = (Log GDP per capita in 2013 - Log GDP per capita in 2012)/Log GDP per capita in 2012" ) +
+      labs (caption = "Formula for Growth = (Log GDP per capita in 2013 - Log GDP per capita in 2012)" ) +
       theme_minimal() +
       theme(plot.title = element_text(hjust = 0.5))
 
 ggsave("Qn1b.png")
 
-change.gdp.air.reg <- lm(Growth.Log.GDP~Mean.Annual.Exposure.PM2.5.2013+I(Mean.Annual.Exposure.PM2.5.2013^2), data = df.gdp.air)
+change.gdp.air.reg <- lm(Change.Log.GDP~Mean.Annual.Exposure.PM2.5.2013+I(Mean.Annual.Exposure.PM2.5.2013^2), data = df.gdp.air)
  pander::pander(change.gdp.air.reg)
 
 #Since there's an annoying point, drop it from sample
 
- df.gdp.air1 <- df.gdp.air[df.gdp.air$Growth.Log.GDP > -0.01,]
- ggplot(df.gdp.air1, aes(x=Mean.Annual.Exposure.PM2.5.2013, y= Growth.Log.GDP)) +
+ ggplot(df.gdp.air, aes(x=Mean.Annual.Exposure.PM2.5.2013, y= Change.Log.GDP)) +
     geom_point(shape=19) +   
     geom_smooth(method = loess, method.args = list(family = "symmetric")) + 
       ggtitle("Relationship between Growth Log GDP and Air Pollution in 2013") + 
       xlab("\nPM 2.5 Mean Annual Exposure") + 
+        ylim(-0.1,0.2) +
       ylab("Growth in Log GDP per capita (constant 2010 US$)\n") + 
-      labs (caption = "Outlier (Growth < -0.01) was removed for asthetic purposes. \n Formula for Growth = (Log GDP per capita in 2013 - Log GDP per capita in 2012)/Log GDP per capita in 2012 \n") +
+      labs (caption = "Outlier (Growth < -0.4) was removed for aesthetic purposes. \n Formula for Growth = Log GDP per capita in 2013 - Log GDP per capita in 2012\n") +
       theme_minimal() +
       theme(plot.title = element_text(hjust = 0.5, face = "bold"),
             plot.caption = element_text(face = "italic"))
 
 ggsave("Qn1c.png")
 
- gdp.air.reg <- lm(Growth.Log.GDP~Mean.Annual.Exposure.PM2.5.2013, data = df.gdp.air)
+ gdp.air.reg <- lm(Change.Log.GDP~Mean.Annual.Exposure.PM2.5.2013, data = df.gdp.air)
  pander::pander(gdp.air.reg)
 
 ```
@@ -182,7 +216,12 @@ ggsave("Qn1c.png")
 
  ggplot(df.gdp.air.manu.adr, aes(x=Age.Dependency.Ratio, y= Log.GDP.2013)) +
     geom_point(shape=19) +   
-    geom_smooth(method = loess, method.args = list(family = "symmetric")) + 
+   geom_smooth(method = loess, 
+                method.args = list(family = "symmetric"), 
+                aes(color ="LOESS") ) + 
+        geom_smooth(method = "lm", 
+                    aes(color = "Linear")) +
+      scale_colour_manual(name = "Curve Type",values=c("green","blue")) +
       ggtitle("Relationship between Log GDP and Age Dependency Ratio in 2013") + 
       xlab("\n Age dependency ratio (% of working-age population)") + 
       ylab("Log GDP per capita (constant 2010 US$)\n") + 
@@ -193,7 +232,7 @@ ggsave("Qn1c.png")
 ggsave("Qn2.png")
 
  adr.reg <- lm(Log.GDP.2013~Age.Dependency.Ratio, data = df.gdp.air.manu.adr)
- adr.reg.2 <- lm(Log.GDP.2013~Age.Dependency.Ratio+Old.Age.Dependency.Ratio, data = df.gdp.air.manu.adr.oadr)
+ adr.reg.2 <- lm(Log.GDP.2013~Age.Dependency.Ratio+I(Age.Dependency.Ratio^2), data = df.gdp.air.manu.adr.oadr)
  
  library(memisc)
  memisc::mtable(adr.reg)
@@ -213,6 +252,31 @@ ggsave("Qn2.png")
 
 ggsave("Qn2a.png")
 
+
+ ggplot(df.gdp.air.manu.adr, aes(x=Age.Dependency.Ratio, y= Change.Log.GDP)) +
+    geom_point(shape=19) +   
+   geom_smooth(method = loess, 
+                method.args = list(family = "symmetric"), 
+                aes(color ="LOESS") ) + 
+        geom_smooth(method = "lm", 
+                    aes(color = "Linear")) +
+          ylim(-0.1,0.2) +
+      scale_colour_manual(name = "Curve Type",values=c("green","blue")) +
+      ggtitle("\nRelationship between Growth Log GDP and Age Dependency Ratio in 2013") + 
+      xlab("\n Age dependency ratio (% of working-age population)") + 
+      ylab("Growth Log GDP per capita \n (constant 2010 US$)\n") + 
+      labs (caption = "Outlier (Growth < -0.4) was removed for asthetic purposes.\n 
+            Growth = Log GDP per capita in 2013 - Log GDP per capita in 2012 \n") +
+      theme_minimal() +
+      theme(plot.title = element_text(hjust = 0.5, face = "bold"),
+            plot.caption = element_text(face = "italic"))
+ ggsave("Qn2ag.png")
+ 
+ change.gdp.age.reg <- lm(Change.Log.GDP~Age.Dependency.Ratio, data = df.gdp.air.manu.adr)
+ summary.lm(change.gdp.age.reg)
+ pander::pander(change.gdp.age.reg)
+ 
+
 ```
 
 
@@ -227,13 +291,164 @@ ggsave("Qn2a.png")
 
 ```
 
-```{r, eval=FALSE, include=FALSE}
 
- SL.EMP.INSV.FE.ZS
+```{r infant mort, echo =FALSE}
+
+ #SP.DYN.IMRT.IN
+  df.im.13 <- df.13[df.13$Indicator.Code=="SP.DYN.IMRT.IN",]
+ df.im.13 <- dplyr::select(df.im.13, 1 , 5)
+ colnames(df.im.13)[2] <- "Infant.Mortality"
+ df.gdp.air.manu.adr.im <- merge.data.frame(df.gdp.air.manu.adr, df.im.13, by = "Country.Name")
+
+```
+
+```{r infant graph, echo=FALSE, fig.width=7.29, fig.height=4.5}
+
+ggplot(df.gdp.air.manu.adr.im, aes(x=Infant.Mortality, y= Log.GDP.2013)) +
+    geom_point(shape=19) +   
+    geom_smooth(method = loess, 
+                method.args = list(family = "symmetric"), 
+                aes(color ="LOESS") ) + 
+        geom_smooth(method = "lm", 
+                    formula = y ~ poly(x, 2, raw = TRUE), 
+                    aes(color = "Quadratic")) +
+      scale_colour_manual(name = "Curve Type",values=c("blue","green")) +
+      ggtitle("Relationship between Infant Mortality & Log GDP per Capita") + 
+      xlab("\n Mortality rate, infant (per 1,000 live births)") + 
+      ylab("Log GDP per capita (constant 2010 US$)\n") + 
+      theme_minimal() +
+      theme(plot.title = element_text(hjust = 0.5, face = "bold"))
+
+ggsave("Qn2im.png")
+
+ gdp.im.qrad.reg <- lm(Log.GDP.2013~Infant.Mortality+I(Infant.Mortality^2), data = df.gdp.air.manu.adr.im)
+ pander::pander(gdp.im.qrad.reg)
+ 
+ 
+ ggplot(df.gdp.air.manu.adr.im, aes(x=Infant.Mortality, y= Change.Log.GDP)) +
+    geom_point(shape=19) +   
+    geom_smooth(method = loess, 
+                method.args = list(family = "symmetric"), 
+                aes(color ="LOESS") ) + 
+        geom_smooth(method = "lm", 
+                    aes(color = "Linear")) +
+        scale_colour_manual(name = "Curve Type",values=c("green","blue")) +
+       ylim(-0.1,0.2) +
+        labs (caption = "Outlier (Growth < -0.4) was removed for asthetic purposes.\n 
+            Growth = Log GDP per capita in 2013 - Log GDP per capita in 2012 \n") +
+      ggtitle("Relationship between Infant Morality & Growth Log GDP per Capita") + 
+      xlab("\n Mortality rate, infant (per 1,000 live births)") + 
+      ylab("Growth Log GDP per capita (constant 2010 US$)\n") + 
+      theme_minimal() +
+      theme(plot.title = element_text(hjust = 0.5, face = "bold"))
+ 
+ summary.lm(lm(Change.Log.GDP~Infant.Mortality, data = df.gdp.air.manu.adr.im))
+
+ggsave("Qn2im-g.png")
+
+```
+```{r pop growth, echo =FALSE}
+
+#SP.POP.GROW
+ df.popg.13 <- df.13[df.13$Indicator.Code=="SP.POP.GROW",]
+ df.popg.13 <- dplyr::select(df.popg.13, 1 , 5)
+ colnames(df.popg.13)[2] <- "Pop.Growth"
+ df.gdp.air.manu.adr.popg <- merge.data.frame(df.gdp.air.manu.adr, df.popg.13, by = "Country.Name")
+
+
+```
+
+```{r popg graph, echo=FALSE, fig.width=7.29, fig.height=4.5}
+
+ggplot(df.gdp.air.manu.adr.popg, aes(x=Pop.Growth, y= Log.GDP.2013, label=Country.Code)) +
+    geom_point(shape=19) + 
+       geom_text(size=3, hjust = 2) +
+     geom_smooth(method = loess, 
+                method.args = list(family = "symmetric"), 
+                aes(color ="LOESS") ) + 
+        geom_smooth(method = "lm", 
+                    formula = y ~ poly(x, 3, raw = TRUE), 
+                    aes(color = "Cubic")) +
+      scale_colour_manual(name = "Curve Type",values=c("green","blue")) +
+      ggtitle("Relationship between Population Growth & Log GDP per Capita") + 
+      xlab("\n Population growth (annual %)") + 
+      ylab("Log GDP per capita (constant 2010 US$)\n") + 
+      theme_minimal() +
+      theme(plot.title = element_text(hjust = 0.5, face = "bold"))
+
+ggsave("Qn2popg.png")
+
+ summary.lm(lm(Log.GDP.2013~Pop.Growth, data = df.gdp.air.manu.adr.popg))
+  summary.lm(lm(Log.GDP.2013~Pop.Growth+I(Pop.Growth^2), data = df.gdp.air.manu.adr.popg))
+ gdp.popg.qrad.reg <- lm(Log.GDP.2013~Pop.Growth+I(Pop.Growth^2)+I(Pop.Growth^3), data = df.gdp.air.manu.adr.popg)
+ pander::pander(gdp.popg.qrad.reg)
+ 
+  summary.lm(gdp.popg.qrad.reg)
+  
+  ggplot(df.gdp.air.manu.adr.popg, aes(x=Pop.Growth, y= Change.Log.GDP)) +
+    geom_point(shape=19) +   
+    geom_smooth(method = loess, 
+                method.args = list(family = "symmetric"), 
+                aes(color ="LOESS") ) + 
+        geom_smooth(method = "lm", 
+                    formula = y ~ poly(x, 2, raw = TRUE), 
+                    aes(color = "Quadratic")) +
+      scale_colour_manual(name = "Curve Type",values=c("blue","green")) +
+         ylim(-0.1,0.2) +
+        labs (caption = "Outlier (Growth < -0.4) was removed for asthetic purposes.\n 
+            Growth = Log GDP per capita in 2013 - Log GDP per capita in 2012 \n") +
+      ggtitle("Relationship between Population Growth & Growth Log GDP per Capita") + 
+      xlab("\n Population growth (annual %)") + 
+      ylab("Growth Log GDP per capita \n
+           (constant 2010 US$)\n") + 
+      theme_minimal() +
+      theme(plot.title = element_text(hjust = 0.5, face = "bold"))
+  ggsave("Qn2popgc.png")
+  summary.lm(lm(Change.Log.GDP~Pop.Growth, data = df.gdp.air.manu.adr.popg))
+  change.log.popg.reg <- lm(Change.Log.GDP~Pop.Growth+I(Pop.Growth^2)+I(Pop.Growth^3), data = df.gdp.air.manu.adr.popg)
+  change.log.popg.reg1 <- lm(Change.Log.GDP~Pop.Growth+I(Pop.Growth^2), 
+                             data = df.gdp.air.manu.adr.popg)
+  summary.lm(change.log.popg.reg1)
+  
+  pander::pander(change.log.popg.reg1)
+
 
 ```
 
 
+```{r Death Rates, echo=FALSE}
+
+#Death Rates SP.DYN.CDRT.IN
+
+ df.death.13 <- df.13[df.13$Indicator.Code=="SP.DYN.CDRT.IN",]
+ df.death.13 <- dplyr::select(df.death.13, 1 , 5)
+ colnames(df.death.13)[2] <- "Crude.Death.Rates"
+ df.gdp.air.manu.adr.death <- merge.data.frame(df.gdp.air.manu.adr, df.death.13, by = "Country.Name")
+
+
+```
+
+```{r death graph, echo =FALSE, fig.width=7.29, fig.height=4.5}
+
+ggplot(df.gdp.air.manu.adr.death, aes(x=Crude.Death.Rates, y= Log.GDP.2013)) +
+    geom_point(shape=19) +   
+    geom_smooth(method = loess, method.args = list(family = "symmetric")) + 
+      ggtitle("Relationship between Death Rates & Log GDP per Capita") + 
+       geom_smooth(method = "lm", formula = y ~ poly(x, 3, raw = TRUE), color = "green") + 
+      xlab("\n Death rate, crude (per 1,000 people)") + 
+      ylab("Log GDP per capita (constant 2010 US$)\n") + 
+      theme_minimal() +
+      theme(plot.title = element_text(hjust = 0.5, face = "bold"))
+
+ggsave("Qn2d.png")
+
+ gdp.death.qrad.reg <- lm(Log.GDP.2013~Crude.Death.Rates+I(Crude.Death.Rates^2), data = df.gdp.air.manu.adr.death)
+ pander::pander(gdp.death.qrad.reg)
+
+
+ 
+
+```
 
 ```{r manufacturing, echo=FALSE}
 
@@ -271,7 +486,7 @@ ggsave("Qn3.png")
  
  ggplot(df.gdp.air.manu, aes(x=Percent.Manufacture.GDP, y= Log.GDP.2013)) +
     geom_point(shape=19) +   
-    geom_smooth(method = lm) + 
+    geom_smooth(method = lm, colour = "green") + 
       ggtitle("Relationship between Share of Manufacturing & Log GDP per Capita") + 
       xlab("\n Manufacturing, value added (% of GDP)") + 
       ylab("Log GDP per capita (constant 2010 US$)\n") + 
@@ -368,6 +583,8 @@ dis.tariff.0 <- ggplot(tariff0, aes(x = Product.Num, y = AVDuty.average)) +
 
 
 dis.tariff.0
+ ggsave("tariff.png")
+
 
 #Mean of Malaysia Tariff
 summary <- tariff %>%  na.omit() %>% group_by(Reporter) %>%
@@ -384,4 +601,67 @@ summary <- tariff %>%  na.omit() %>% group_by(Reporter) %>%
 pander::pander(summary)
 ```
 
+```{r plotly, eval=FALSE, include=FALSE}
 
+library(plotly)
+# light grey boundaries
+l <- list(color = toRGB("grey"), width = 0.5)
+
+g <- list(
+  showframe = FALSE,
+  showcoastlines = FALSE,
+  projection = list(type = 'Mercator')
+)
+
+p <- plot_geo(df.gdp.air) %>%
+  add_trace(
+    z = ~Mean.Annual.Exposure.PM2.5.2013, color = ~Mean.Annual.Exposure.PM2.5.2013, colors = 'Blues',
+    text = ~Country.Name, locations = ~Country.Code, marker = list(line = l)
+  ) %>%
+  colorbar(title = 'Mean Annual Exposure PM 2.5') %>%
+  layout(
+    title = 'Mean Annual Exposure PM 2.5.in 2013',
+    geo = g
+  ) 
+
+Sys.setenv("plotly_username"="leannetanjy")
+Sys.setenv("plotly_api_key"="2BhVxnhqDRTTuEDO7Xee")
+
+chart_link = plotly_POST(p, filename="MeanAnnualPollution")
+chart_link
+p
+
+```
+```{r, eval=FALSE, include=FALSE}
+library(plotly)
+# light grey boundaries
+l <- list(color = toRGB("grey"), width = 0.5)
+
+g <- list(
+  showframe = FALSE,
+  showcoastlines = FALSE,
+  projection = list(type = 'Mercator')
+)
+
+q <- plot_geo(df.gdp.air) %>%
+  add_trace(
+    z = ~GDP.2013, color = ~GDP.2013, colors = 'Purples',
+    text = ~Country.Name, locations = ~Country.Code, marker = list(line = l)
+  ) %>%
+  colorbar(title = 'GDP 2013') %>%
+  layout(
+    title = 'GDP constant 2010$ in 2013',
+    geo = g
+  ) 
+
+Sys.setenv("plotly_username"="leannetanjy")
+Sys.setenv("plotly_api_key"="2BhVxnhqDRTTuEDO7Xee")
+
+chart_link = plotly_POST(q, filename="GDP in 2013")
+chart_link
+q
+
+```
+```
+
+  
